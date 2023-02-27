@@ -105,7 +105,7 @@ public:
   Mutex connection_mutex;
   size_t num_connections;
 
-  int ServeUpdates(socket_type sock);
+  int ServeUpdates(socket_type sock, bool serve_all_samples);
   int ReportCrash(socket_type sock);
   int ReportNewCoverage(socket_type sock);
   uint64_t GetIndex(std::vector<TimestampIndex> &timestamps, uint64_t timestamp, uint64_t last_index);

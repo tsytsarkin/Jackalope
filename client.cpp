@@ -174,11 +174,15 @@ int CoverageClient::ReportNewCoverage(Coverage *new_coverage, Sample *new_sample
   return 1;
 }
 
-int CoverageClient::GetUpdates(std::list<Sample *> &new_samples, uint64_t total_execs) {
+int CoverageClient::GetUpdates(std::list<Sample *> &new_samples, uint64_t total_execs, bool download_all_samples) {
   uint64_t server_timestamp;
   string module_name;
 
-  ConnectToServer('U');
+  if (download_all_samples){
+    ConnectToServer('D');
+  } else {
+    ConnectToServer('U');
+  }
 
   send(sock, (char *)&client_id, sizeof(client_id), 0);
   send(sock, (char *)&total_execs, sizeof(total_execs), 0);

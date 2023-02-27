@@ -261,4 +261,6 @@ protected:
   uint64_t last_save_time;
   
   SampleTrie sample_trie;
+  
+  bool download_all_samples_from_server;
 };

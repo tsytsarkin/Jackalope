@@ -122,6 +122,8 @@ void Fuzzer::ParseOptions(int argc, char **argv) {
   add_all_inputs = GetBinaryOption("-add_all_inputs", argc, argv, false);
   
   dump_coverage = GetBinaryOption("-dump_coverage", argc, argv, false);
+
+  download_all_samples_from_server = GetBinaryOption("-download_all_samples_from_server", argc, argv, true);
 }
 
 void Fuzzer::SetupDirectories() {
@@ -593,7 +595,7 @@ void Fuzzer::SynchronizeAndGetJob(ThreadContext* tc, FuzzerJob* job) {
   {
     last_server_update_time_ms = GetCurTime();
     server_mutex.Lock();
-    server->GetUpdates(server_samples, total_execs);
+    server->GetUpdates(server_samples, total_execs, false);
     server_mutex.Unlock();
     state = SERVER_SAMPLE_PROCESSING;
   }
@@ -606,7 +608,7 @@ void Fuzzer::SynchronizeAndGetJob(ThreadContext* tc, FuzzerJob* job) {
         server->ReportNewCoverage(&fuzzer_coverage, NULL);
         coverage_mutex.Unlock();
         last_server_update_time_ms = GetCurTime();
-        server->GetUpdates(server_samples, total_execs);
+        server->GetUpdates(server_samples, total_execs, download_all_samples_from_server);
         server_mutex.Unlock();
         state = SERVER_SAMPLE_PROCESSING;
       } else {
