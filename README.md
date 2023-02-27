@@ -130,6 +130,8 @@ The following command line arguments are supported:
 
 `-dump_coverage` - Periodically export coverage (as `coverage.txt` in the output directory) in a format suitable for importing into [Lighthouse](https://github.com/gaasedelen/lighthouse)
 
+`-download_all_samples_from_server` - When running with `-server`, the client downloads all samples from fuzzing server on start/resume. 
+
 For TinyInst instrumentation command line arguments, refer to [TinyInst readme](https://github.com/googleprojectzero/TinyInst).
 
 Example (macOS):
