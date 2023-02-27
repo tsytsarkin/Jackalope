@@ -133,7 +133,7 @@ int ServerCommon::SendCoverage(socket_type sock, Coverage &coverage) {
 
     free(offsets);
   }
-  
+
   send(sock, "N", 1, 0);
 
   return 1;
@@ -184,7 +184,7 @@ int ServerCommon::RecvCoverage(socket_type sock, Coverage &coverage) {
       module_coverage->offsets.insert(offsets[i]);
     }
   }
-  
+
   return 1;
 }
 
@@ -221,7 +221,7 @@ uint64_t CoverageServer::GetIndex(std::vector<TimestampIndex> &timestamps, uint6
   return timestamps[m].index;
 }
 
-int CoverageServer::ServeUpdates(socket_type sock) {
+int CoverageServer::ServeUpdates(socket_type sock, bool serve_all_samples) {
   uint64_t timestamp;
   uint64_t client_id, client_execs;
 
@@ -243,17 +243,26 @@ int CoverageServer::ServeUpdates(socket_type sock) {
 
   Write(sock, (const char *)(&server_timestamp), sizeof(server_timestamp));
 
-  if (timestamp >= server_timestamp) {
+  if (timestamp >= server_timestamp && !serve_all_samples) {
     send(sock, "N", 1, 0);
     mutex.UnlockRead();
     return 1;
   }
 
-  uint64_t first_index = GetIndex(corpus.timestamps, timestamp, corpus.samples.size());
+  uint64_t first_index = 0;
+  if (!serve_all_samples) {
+    first_index = GetIndex(corpus.timestamps, timestamp, corpus.samples.size());
+  }
+
   if (first_index >= corpus.samples.size()) {
     send(sock, "N", 1, 0);
     mutex.UnlockRead();
     return 1;
+  }
+
+  size_t samples_to_send = corpus.samples.size() - first_index;
+  if (samples_to_send > 0) {
+    printf("Sending %d samples to client %016llx\n", samples_to_send, client_id);
   }
 
   for (size_t i = first_index; i < corpus.samples.size(); i++) {
@@ -291,14 +300,14 @@ bool CoverageServer::OnNewCoverage(Coverage *client_coverage) {
 
 int CoverageServer::ReportNewCoverage(socket_type sock) {
   char command;
-  
+
   Coverage client_coverage;
   Coverage new_client_coverage;
 
   if(!RecvCoverage(sock, client_coverage)) {
     return 0;
   }
-  
+
   mutex.LockRead();
   if (!HasNewCoverage(&client_coverage, &new_client_coverage)) {
     mutex.UnlockRead();
@@ -403,10 +412,10 @@ int CoverageServer::ReportCrash(socket_type sock) {
       WARN("Invalid characters in crash filename");
       continue;
     }
-    
+
     bool should_save_crash = false;
     int duplicates = 0;
-    
+
     crash_mutex.Lock();
     num_crashes++;
 
@@ -531,7 +540,9 @@ int CoverageServer::HandleConnection(socket_type sock) {
     } else if (command == 'S') {
       ret = ReportNewCoverage(sock);
     } else if (command == 'U') {
-      ret = ServeUpdates(sock);
+      ret = ServeUpdates(sock, false);
+    }  else if (command == 'D') {
+      ret = ServeUpdates(sock, true);
     } else {
       ret = 0;
     }
@@ -682,7 +693,7 @@ void CoverageServer::RunServer() {
     if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout))) {
 #else
     struct timeval tv;
-    tv.tv_sec = 10000; // 10 Secs Timeout 
+    tv.tv_sec = 10000; // 10 Secs Timeout
     tv.tv_usec = 0;
     if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval))) {
 #endif

@@ -34,7 +34,7 @@ public:
   void Init(int argc, char **argv);
 
   int ReportNewCoverage(Coverage *new_coverage, Sample *new_sample);
-  int GetUpdates(std::list<Sample *> &new_samples, uint64_t total_execs);
+  int GetUpdates(std::list<Sample *> &new_samples, uint64_t total_execs, bool download_all_samples);
   int ReportCrash(Sample *crash, std::string &crash_desc);
 
   void SaveState(FILE* fp);

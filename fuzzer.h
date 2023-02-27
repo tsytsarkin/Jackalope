@@ -69,17 +69,17 @@ public:
     Instrumentation * instrumentation;
     Minimizer* minimizer;
     RangeTracker* range_tracker;
-    
+
     // only collected with incremental_coverage=off
     Coverage thread_coverage;
 
     //std::string target_cmd;
     int target_argc;
     char **target_argv;
-    
+
     // a thread-local copy of all samples vector
     std::vector<Sample *> all_samples_local;
-    
+
     bool coverage_initialized;
 
     ~ThreadContext();
@@ -112,12 +112,12 @@ protected:
 
     void Save(FILE *fp);
     void Load(FILE *fp);
-    
+
     Sample *sample;
     std::string sample_filename;
     MutatorSampleContext *context;
     std::vector<Range> ranges;
- 
+
     double priority;
     uint64_t sample_index;
     uint64_t num_runs;
@@ -126,7 +126,7 @@ protected:
     uint64_t num_newcoverage;
     int32_t discarded;
   };
-  
+
   struct CmpEntryPtrs
   {
     bool operator()(const SampleQueueEntry* lhs, const SampleQueueEntry* rhs) const {
@@ -141,7 +141,7 @@ protected:
   std::vector<Sample *> all_samples;
   std::vector<SampleQueueEntry *> all_entries;
   std::priority_queue<SampleQueueEntry *, std::vector<SampleQueueEntry *>, CmpEntryPtrs> sample_queue;
-  
+
   struct FuzzerJob {
     JobType type;
     union {
@@ -157,7 +157,7 @@ protected:
   void SetupDirectories();
 
   ThreadContext *CreateThreadContext(int argc, char **argv, int thread_id);
-  
+
   virtual Mutator *CreateMutator(int argc, char **argv, ThreadContext *tc) = 0;
   virtual PRNG *CreatePRNG(int argc, char **argv, ThreadContext *tc);
   virtual Instrumentation *CreateInstrumentation(int argc, char **argv, ThreadContext *tc);
@@ -169,11 +169,11 @@ protected:
 
   // by default, all return values are interesting
   virtual bool IsReturnValueInteresting(uint64_t return_value) { return true; }
-  
+
   virtual bool TrackHotOffsets() { return false; }
 
   void ReplaceTargetCmdArg(ThreadContext *tc, const char *search, const char *replace);
-  
+
   bool MagicOutputFilter(Sample *original_sample, Sample *output_sample, const char *magic, size_t magic_size);
 
   void SaveSample(ThreadContext *tc, Sample *sample, uint32_t init_timeout, uint32_t timeout, Sample *original_sample);
@@ -196,7 +196,7 @@ protected:
   uint64_t num_samples_discarded;
   uint64_t num_threads;
   uint64_t total_execs;
-  
+
   void SaveState(ThreadContext *tc);
   void RestoreState(ThreadContext *tc);
   void DumpCoverage();
@@ -244,21 +244,23 @@ protected:
   int coverage_reproduce_retries;
   int crash_reproduce_retries;
   bool clean_target_on_coverage;
-  
+
   bool should_restore_state;
 
   bool dry_run;
-  
+
   bool incremental_coverage;
-  
+
   bool add_all_inputs;
-  
+
   bool dump_coverage;
-  
+
   Mutex crash_mutex;
   std::unordered_map<std::string, int> unique_crashes;
-  
+
   uint64_t last_save_time;
-  
+
   SampleTrie sample_trie;
+
+  bool download_all_samples_from_server;
 };
